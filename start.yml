@@ -1,0 +1,105 @@
+---
+ - hosts: 'all'
+   gather_facts: no
+   vars_files: 
+    - 'vars/main.yml' 
+   tasks:
+    - name: 'Install Mysql server'
+      apt: 'name=mysql-server state=latest update_cache=no'
+      notify: 
+       - 'mysql server install'
+       
+    - name: 'Add PHP repo'
+      action: 'apt_repository repo={{ item }} update_cache=yes'
+      with_items:
+        - 'ppa:ondrej/php'
+        - 'ppa:nijel/phpmyadmin'
+
+    - name: 'Install packages'
+      action: 'apt name={{ item }} state=latest update_cache=no'
+      with_items: 
+       - 'vsftpd'
+       - 'lshell'
+       - 'python-mysqldb'
+       - 'python-passlib'
+       - 'php7.0-fpm'
+       - 'php7.0-mysql'
+       - 'php7.0-mcrypt'
+       - 'php7.0-curl'
+       - 'php7.0-mbstring'
+       - 'php7.0-gettext'
+       # - 'php7.0-db'
+       - 'php7.0-gd'
+       - 'php7.0-zip'
+       - 'php7.0-bz2'
+       - 'php7.0-xml'
+       - 'phpmyadmin'
+       - 'php5.6-fpm'
+       - 'php5.6-mysql'
+       - 'php5.6-xml'
+       - 'php5.6-curl'
+       - 'unzip'
+       - 'zip'
+       - 'htop'   
+       - 'rsync'   
+
+    - name: 'Check Apache2'
+      command: 'dpkg-query -l apache2'
+      register: 'check_apache2'
+
+    - name: 'Purge Apache2'
+      apt: 'name=apache2 state=absent purge=yes'  
+      when: check_apache2.stdout.find('no packages found') == -1
+
+    - name: 'Install NGINX'
+      apt: 'name=nginx state=latest update_cache=no'
+      
+    - name: 'Config NGINX'
+      template: 'src=templates/nginx/nginx.conf.j2 dest=/etc/nginx/nginx.conf backup=yes'
+      notify:
+       - 'nginx reload'
+
+    - name: 'Config NGINX default host'
+      template: 'src=templates/nginx/default.j2 dest=/etc/nginx/sites-available/default backup=yes'
+      notify:
+       - 'nginx reload'
+
+    - name: 'Config VsFTP'
+      template: 'src=templates/vsftp/vsftpd.conf.j2 dest=/etc/vsftpd.conf backup=yes'
+      notify:
+       - 'vsftpd restart'
+
+    - name: 'Config lshell'
+      template: 'src=templates/lshell/lshell.conf.j2 dest=/etc/lshell.conf backup=yes'
+
+    - name: 'Timezone php-cli'
+      replace: 'dest={{ item }} regexp="^;date.timezone =$" replace="date.timezone = Europe/Moscow" backup=yes'
+      with_items:
+        - /etc/php/7.0/cli/php.ini
+        - /etc/php/7.0/fpm/php.ini
+ 
+    - name: 'cgi.fix_pathinfo'
+      replace: 'dest={{ item }} regexp="^;cgi.fix_pathinfo=1$" replace="cgi.fix_pathinfo=0" backup=yes'
+      with_items:
+        - /etc/php/7.0/cli/php.ini
+        - /etc/php/7.0/fpm/php.ini
+ 
+    - name: 'Filesize php-cli'
+      replace: 'dest=/etc/php/7.0/cli/php.ini regexp="^upload_max_filesize = 2M$" replace="upload_max_filesize = 50M" backup=yes'  
+
+    - name: 'Link ip/phpmyadmin'   
+      file: 'src=/usr/share/phpmyadmin dest=/var/www/html/phpmyadmin state=link'  
+      
+# ##################### Handlers #######################
+   handlers:
+    - name: 'nginx reload'
+      service: 'name=nginx state=reloaded'
+
+    - name: 'vsftpd restart'
+      service: 'name=vsftpd state=restarted'
+
+    - name: 'mysql server install'
+      command: 'mysqladmin -u root password {{ mysql_root_pass }}'
+
+    - name: 'php-fpm restart'
+      service: 'name=php7.0-fpm state=restarted'

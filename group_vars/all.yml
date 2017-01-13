@@ -1,0 +1,8 @@
+---
+# Variables listed here are applicable to all host groups
+
+user: lifeman
+local_home: "{{ lookup('env','HOME') }}"
+
+php5:
+  php_date_timezone: 'Europe/Kiev'

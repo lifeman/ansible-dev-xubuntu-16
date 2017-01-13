@@ -1,0 +1,23 @@
+---
+# tasks file for skypeforlinux
+
+# Repositories are a better way to install package because the update is automagically and there is no need to download the package
+
+- name: add skype repo key
+  apt_key:
+    url: https://repo.skype.com/data/SKYPE-GPG-KEY
+
+- name: add skype repo
+  apt_repository:
+    repo: deb [arch=amd64] https://repo.skype.com/deb stable main
+    filename: skype-stable
+
+- name: install skype
+  apt:
+    name: skypeforlinux
+
+# Alternative: Download and install package directly
+
+#- name: install skype
+#  apt:
+#    deb: ttps://go.skype.com/skypeforlinux-64-alpha.deb

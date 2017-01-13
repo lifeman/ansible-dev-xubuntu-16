@@ -1,0 +1,94 @@
+# An ansible playbook that sets up a tricked-out vim/zsh/tmux environment
+# ansible-playbook -i hosts playbook.yml -c local -K
+---
+
+- name: Bootstrapping developer environment
+  hosts: all
+  user: user
+  sudo: yes
+
+  tasks:
+
+    - name: Install list of packages
+      apt: pkg={{item}} state=installed
+      with_items:
+       - ntp
+       - curl
+       - tmux
+       - httpie
+       - git
+       - git-core
+       - git-flow
+       - git-email
+       - git-extras
+       - git-svn
+       - zsh
+       - vlc
+       - mc
+       - gimp
+       - flashplugin-installer
+# to manage password
+       - keepass2
+       - mono-complete
+       - docker.io
+# pour phpstorm
+       - openjdk-7-jre
+       - chromium-browser
+       - htop
+# nfs support for Vagrant
+       - nfs-kernel-server
+       - nfs-common
+       - portmap
+# dictionaty and read book
+       - calibre
+       - goldendict
+
+  # sublime
+    - name: add sublime repo
+      apt_repository:
+        repo: 'ppa:webupd8team/sublime-text-3'
+
+    - name: install sublime
+      apt:
+        name: 'sublime-text-installer'
+        update_cache: yes
+#    - name: pause
+#      pause: prompt="Ctrl+breack"
+
+
+  # Install PhpStorm
+    - name : create directory for PhpStorm
+      file: path=/opt/phpstorm-10 state=directory mode=0755
+
+    - name: "PhpStorm | Download application in zip"
+      sudo: false
+      get_url: 
+        url=https://download.jetbrains.com/webide/PhpStorm-10.0.3.tar.gz 
+        dest=/tmp/phpstorm.tar.gz 
+        validate_certs=False
+
+    - name: "PhpStorm | Unarchive application and move into folder /opt"
+      unarchive: src=/tmp/phpstorm.tar.gz dest=/opt/phpstorm-10
+      ignore_errors: true
+
+    - name: download virtualbox deb
+      get_url:
+        url: 'http://download.virtualbox.org/virtualbox/5.0.12/virtualbox-5.0_5.0.12-104815~Ubuntu~trusty_amd64.deb'
+        dest: '/tmp/virtualbox.deb'
+
+    - name: install virtualbox package
+      apt:
+        deb: '/tmp/virtualbox.deb'
+        state: present
+
+    - name: download vagrant deb
+      get_url:
+        url: 'https://releases.hashicorp.com/vagrant/1.8.1/vagrant_1.8.1_x86_64.deb'
+        dest: '/tmp/vagrant.deb'
+
+    - name: install vagrant package
+      apt:
+        deb: '/tmp/vagrant.deb'
+        state: present
+
+

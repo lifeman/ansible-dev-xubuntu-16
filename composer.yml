@@ -1,0 +1,17 @@
+# An ansible (ansible ver 2.2) playbook that sets up a tricked-out vim/zsh/tmux environment
+# old: ansible-playbook -i hosts playbook.yml -c local -K
+
+# run: ansible-playbook virtualbox.yml -K
+# test: ansible-playbook --check --list-tasks --tags "virtualbox" virtualbox.yml
+---
+
+- name: Bootstrapping vagrant
+  hosts: all
+  become: true
+  roles:
+    - { role: composer }
+  tasks:
+    - debug: msg={{ ansible_user }}
+
+    # this is a 'task' include
+    # - include: virtualbox.yml

@@ -1,0 +1,31 @@
+---
+# Virtualbox setup
+
+- name: Add VirtualBox repo keys
+  apt_key:  url={{ item }} state=present
+  with_items:
+    - "https://www.virtualbox.org/download/oracle_vbox.asc"
+    - "https://www.virtualbox.org/download/oracle_vbox_2016.asc"
+
+- name: Add VirtualBox repo
+  apt_repository:
+    repo: 'deb http://download.virtualbox.org/virtualbox/debian xenial contrib'
+    state: present
+    update_cache: yes
+
+- name: Install virtualbox in given version
+  apt:
+    name: virtualbox-{{virtualbox_version}}
+    state: present
+
+- name: Check if extension pack is already installed
+  shell: "VBoxManage list extpacks"
+  register: extpack_list
+
+- name: Download VirtualBox extension pack
+  shell: "cd /tmp/ &&  wget http://download.virtualbox.org/virtualbox/{{virtualbox_extpack_version}}/Oracle_VM_VirtualBox_Extension_Pack-{{virtualbox_extpack_version}}.vbox-extpack"
+  when: 'extpack_list.stdout == "Extension Packs: 0"'
+
+- name: Install VirtualBox extension pack
+  shell: "VBoxManage extpack install --replace /tmp/Oracle_VM_VirtualBox_Extension_Pack-{{virtualbox_extpack_version}}.vbox-extpack"
+  when: 'extpack_list.stdout == "Extension Packs: 0"'

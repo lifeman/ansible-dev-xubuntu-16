@@ -1,0 +1,9 @@
+---
+
+- name: NTP | Install
+  apt: name=ntp state=present
+  tags: ntp
+
+- name: NTP | Start the ntp service
+  service: name=ntp state=started enabled=true
+  tags: ntp

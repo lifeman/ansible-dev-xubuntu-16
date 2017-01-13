@@ -1,0 +1,45 @@
+---
+# This playbook contains common plays that will be run on all nodes.
+
+- name: Linux | Update cache
+  apt: update_cache=yes cache_valid_time=3600
+  tags: linux
+
+- name: Linux | Upgrade
+  apt: upgrade=dist
+  tags: linux
+
+- name: Package | Install lists packages
+  apt: pkg={{ item }} state=installed
+  tags: package
+  with_items:
+    - aptitude
+    # - bash-completion
+    - vim
+    - git
+    - git-core
+    - git-flow
+    - git-email
+    - git-extras
+    - git-svn
+    # - zsh
+    - curl
+    - wget
+    - htop
+    - ack-grep
+    # - tig
+    - unzip
+    - tar
+    - gzip
+    - bzip2
+    # - nfs-kernel-server
+    # - nfs-common
+    # - pwgen
+
+- include: utf8.yml
+- include: ntp.yml
+  tags: ntp
+- include: java8-oracle.yml
+  tags: java8
+- include: skype.yml
+  tags: skype
